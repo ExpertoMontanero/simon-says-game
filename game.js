@@ -1,41 +1,85 @@
-//game pattern array
-var gamePattern = [];
 
-//user clicked pattern array
-var userClickedPattern = [];
-
-//posibble colors
 var buttonColours = ["red", "blue", "green", "yellow"];
 
-$(".btn").click(function () {
+var gamePattern = [];
+var userClickedPattern = [];
 
-    //2. Inside the handler, create a new variable called userChosenColour to store the id of the button that got clicked.
-    var userChosenColour = $(this).attr("id");
 
-    //4. Add the contents of the variable userChosenColour created in step 2 to the end of this new userClickedPattern
-    userClickedPattern.push(userChosenColour);
+var started = false;
 
-    //console.log(userClickedPattern);
 
+var level = 0;
+var currentLevel = 1;
+
+$(document).keypress(function () {
+  if (!started) {
+    $("#level-title").text("Level " + level);
+    nextSequence();
+    started = true;
+  }
 });
 
+  $(".btn").click(function () {
 
-//random color generating function
-function nextSequence() {
+    var userChosenColour = $(this).attr("id");
+    userClickedPattern.push(userChosenColour);
+
+    playSound(userChosenColour);
+    animatePress(userChosenColour);
+    checkAnswer(currentLevel);
+    currentLevel++;
+    if (gamePattern.length == userClickedPattern.length&&started==true) {
+      setTimeout(function () {
+        nextSequence();
+      }, 1000);
+      userClickedPattern = [];
+      currentLevel = 1;
+    }
+
+  });
+
+  function nextSequence() {
+
+    level++;
+
+
+    $("#level-title").text("Level " + level);
+
     var randomNumber = Math.floor(Math.random() * 4);
     var randomChosenColour = buttonColours[randomNumber];
     gamePattern.push(randomChosenColour);
-    //animating 
+
     $("#" + randomChosenColour).fadeIn(100).fadeOut(100).fadeIn(100);
+    playSound(randomChosenColour);
+  }
 
-    //playing proper audio
-    var audio = new Audio("sounds/" + randomChosenColour + ".mp3");
+  function playSound(name) {
+    var audio = new Audio("sounds/" + name + ".mp3");
     audio.play();
+  }
 
-}
+  function animatePress(currentColor) {
+    $("#" + currentColor).addClass("pressed");
+    setTimeout(function () {
+      $("#" + currentColor).removeClass("pressed");
+    }, 100);
+  }
 
-
-
-
-
-
+  function checkAnswer(currentLevel) {
+    if (userClickedPattern[currentLevel - 1] == gamePattern[currentLevel - 1]) {
+      console.log("succes");
+    }
+    else {
+      var audio = new Audio("sounds/wrong.mp3")
+      audio.play();
+      $("body").addClass("game-over");
+      setTimeout(function () {
+        $("body").removeClass("game-over");
+      }, 200);
+      $("h1").text("Game Over, Press Any Key to Restart");
+      started = false;
+      level = 0;
+      userClickedPattern=[];
+      gamePattern=[];
+    }
+  }
